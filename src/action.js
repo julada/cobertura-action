@@ -16,6 +16,7 @@ async function action(payload) {
   }
 
   const path = core.getInput("path", { required: true });
+  const sourceRoot = core.getInput("source_root", { required: false });
   const skipCovered = JSON.parse(
     core.getInput("skip_covered", { required: true })
   );
@@ -57,6 +58,7 @@ async function action(payload) {
     showMissingMaxLength,
     filteredFiles: changedFiles,
     reportName,
+    sourceRoot,
   });
   await addComment(pullRequestNumber, comment, reportName);
 }
@@ -71,6 +73,7 @@ function markdownReport(reports, commit, options) {
     showMissingMaxLength = -1,
     filteredFiles = null,
     reportName = "Coverage Report",
+    sourceRoot = "",
   } = options || {};
   const status = (total) =>
     total >= minimumCoverage ? ":white_check_mark:" : ":x:";
@@ -82,7 +85,9 @@ function markdownReport(reports, commit, options) {
   for (const report of reports) {
     const folder = reports.length <= 1 ? "" : ` ${report.folder}`;
     for (const file of report.files.filter(
-      (file) => filteredFiles == null || filteredFiles.includes(file.filename)
+      (file) =>
+        filteredFiles == null ||
+        filteredFiles.includes(sourceRoot + file.filename)
     )) {
       const fileTotal = Math.round(file.total);
       const fileLines = Math.round(file.line);
